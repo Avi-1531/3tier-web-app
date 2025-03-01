@@ -2,6 +2,12 @@
 This project is a full-stack web application built using React js for the frontend, Express js for the backend, and MySQL as the database. The application is designed to demonstrate the implementation of a 3-tier architecture, where the presentation layer (React js), application logic layer (Express js), and data layer (MySQL) are separated into distinct tiers.
 
 
+![Project Diagram](https://github.com/user-attachments/assets/ea1fd122-a5bd-435e-be7f-15a71a675ffe)
+
+
+
+
+
 ## User Interface Screenshots 
 #### Dashboard
 ![Dashboard](./frontend/public/ss/dashboard.png)
