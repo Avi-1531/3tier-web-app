@@ -42,7 +42,7 @@ jobs:
     - name: Build frontend
       working-directory: frontend
       run: |
-        npm ci
+        npm install
         npm run build
 
     - name: Move frontend build to backend public folder
@@ -52,7 +52,7 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: backend
-      run: npm ci
+      run: npm install
 
     - name: Zip backend for deployment
       run: |
