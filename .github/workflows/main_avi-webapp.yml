@@ -28,13 +28,7 @@ jobs:
         
         
     - name: Install Gitleaks
-      run: |
-          curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
-            | grep "browser_download_url.*linux_amd64.tar.gz" \
-            | cut -d '"' -f 4 \
-            | wget -qi -
-          tar -xvf gitleaks_*.tar.gz
-          sudo mv gitleaks /usr/local/bin
+      run: sudo apt install gitleaks
       
     - name: Run Gitleaks Scan
       run: gitleaks detect --source . --report-format json --report-path gitleaks-report.json
