@@ -1,65 +1,94 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - avi-webapp
+
+name: cicd pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: avi-webapp    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: './build'      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '20.x'                # set this to the node version to use
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22.x'
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install Gitleaks
+      run: |
+          curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | grep "browser_download_url.*linux_amd64.tar.gz" \
+            | cut -d '"' -f 4 \
+            | wget -qi -
+          tar -xvf gitleaks_*.tar.gz
+          sudo mv gitleaks /usr/local/bin
+      
+    - name: Run Gitleaks Scan
+      run: gitleaks detect --source . --report-format json --report-path gitleaks-report.json
+      
+    - name: Build frontend
+      working-directory: frontend
+      run: |
+        npm ci
+        npm run build
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+    - name: Move frontend build to backend public folder
+      run: |
+        mkdir -p backend/public
+        cp -r frontend/build/* backend/public/
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: .
+    - name: Install backend dependencies
+      working-directory: backend
+      run: npm ci
+
+    - name: Zip backend for deployment
+      run: |
+        cd backend
+        zip -r ../build.zip .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-zip
+        path: build.zip
 
   deploy:
+    permissions:
+      contents: none
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: build-zip
+        path: .
+        
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1E2A6DD445B2454196895053DA7D8F60 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9D05767050E647D3B714C7A6C16A22CB }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9B6EA950F17D45E5BCEA9A962B026C2F }}
+          
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: build.zip
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'avi-webapp'
-          slot-name: 'Production'
-          package: .
           
