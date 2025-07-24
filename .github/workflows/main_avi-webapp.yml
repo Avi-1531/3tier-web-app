@@ -72,12 +72,7 @@ jobs:
         name: build-zip
         path: .
         
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1E2A6DD445B2454196895053DA7D8F60 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9D05767050E647D3B714C7A6C16A22CB }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9B6EA950F17D45E5BCEA9A962B026C2F }}
+    
           
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
