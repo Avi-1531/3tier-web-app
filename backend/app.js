@@ -9,12 +9,19 @@ const app = express();
 const path = require('path');
 
 // Serve static frontend build files
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-// For any unmatched routes, serve the frontend's index.html
+// Handle SPA (React/Vite)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+// app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// // For any unmatched routes, serve the frontend's index.html
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+// });
 
 app.use(cors());
 app.use(bodyParser.json());
